@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG 学习教程 · GreenRAG</title>
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  body{background:#fbfdf7;padding:0 0 90px}
+  .tut-top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:13px 26px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .tut-top b{font-size:17px}
+  .tut-top .grow{flex:1}
+  .tut-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:8px 26px 0}
+  .tut-tab{font-size:13px;padding:7px 15px;border-radius:9px;color:var(--txt2);
+    border:1px solid var(--line);cursor:pointer;background:#fff}
+  .tut-tab:hover{border-color:var(--g);color:var(--g-d)}
+  .tut-tab.on{background:var(--g);color:#fff;border-color:var(--g);font-weight:600}
+  .tut-sec{display:none;max-width:1000px;margin:18px auto 0;padding:0 26px}
+  .tut-sec.on{display:block}
+  .tut-card{background:#fff;border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:24px 28px;margin-bottom:16px}
+  .tut-card h3{font-size:17px;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+  .tut-card h3 .em{width:26px;height:26px;flex:none;border-radius:8px;background:var(--g);
+    color:#fff;font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+  .tut-card h4{font-size:14.5px;color:var(--g-d);margin:18px 0 7px}
+  .tut-card p,.tut-card li{font-size:13.8px;color:var(--txt2);line-height:1.9}
+  .tut-card p{margin:8px 0}
+  .tut-card ul,.tut-card ol{padding-left:22px;margin:8px 0}
+  .callout{border-radius:11px;padding:13px 17px;margin:13px 0;font-size:13.5px;line-height:1.8}
+  .callout.g{background:var(--g-soft2);border:1px solid var(--g-line);color:#40511f}
+  .callout.y{background:#fff8e6;border:1px solid #f0dfae;color:#6b5510}
+  .callout.r{background:#fdf0ef;border:1px solid #f2cdca;color:#8c322c}
+  .formula{font-family:var(--mono);background:#f6f9f0;border:1px solid var(--g-line);
+    border-radius:9px;padding:10px 16px;margin:10px 0;font-size:13.5px;color:#2f4712;
+    overflow-x:auto}
+  table.cmp{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}
+  table.cmp th,table.cmp td{border:1px solid var(--line);padding:9px 13px;text-align:left}
+  table.cmp th{background:var(--g-soft2);color:#40511f}
+  table.cmp tr:nth-child(2n) td{background:#fcfdf9}
+  .kv b{color:var(--g-d)}
+  .steps-t{list-style:none;counter-reset:n}
+  .steps-t>li{counter-increment:n;position:relative;padding:0 0 18px 46px;border-left:2px solid var(--g-line);
+    margin-left:14px}
+  .steps-t>li:last-child{border-left-color:transparent}
+  .steps-t>li::before{content:counter(n);position:absolute;left:-17px;top:0;width:32px;height:32px;
+    border-radius:10px;background:var(--g);color:#fff;font-weight:800;display:flex;
+    align-items:center;justify-content:center;font-size:14px}
+  .tut-nav-btn{font-size:12.5px}
+  .term{border-bottom:1px dashed #cfd9c0;padding:11px 0}
+  .term b{display:block;font-size:13.5px;color:var(--txt)}
+  .term p{font-size:13px;color:var(--txt2);margin:3px 0 0}
+  .tag-note{font-size:12.5px;color:var(--mut)}
+  .mini{font-size:12.5px}
+  code.c{font-family:var(--mono);background:var(--g-soft2);border:1px solid var(--g-line);
+    border-radius:5px;padding:0 5px;color:#3c5a10;font-size:12.5px}
+  .anch{scroll-margin-top:110px}
+</style>
+</head>
+<body>
+
+<div class="tut-top">
+  <b>📖 RAG 学习教程</b>
+  <span class="tag-note">跟着这份手册,你不仅能操作 GreenRAG,还能真正理解 RAG 的原理</span>
+  <span class="grow"></span>
+  <button class="btn outline sm" onclick="go('home')">← 返回主界面</button>
+  <button class="btn primary sm" onclick="go('kb')">去上传文档</button>
+</div>
+<div class="tut-tabs">
+  <div class="tut-tab on" data-sec="sec-what">① RAG 是什么</div>
+  <div class="tut-tab" data-sec="sec-handson">② 10 分钟上手</div>
+  <div class="tut-tab" data-sec="sec-params">③ 参数与调优</div>
+  <div class="tut-tab" data-sec="sec-adv">④ 进阶原理</div>
+  <div class="tut-tab" data-sec="sec-faq">⑤ FAQ 与术语表</div>
+</div>
+
+<!-- ============================ ① 什么是 RAG ============================ -->
+<section class="tut-sec on" id="sec-what">
+  <div class="tut-card anch">
+    <h3><span class="em">?</span>一句话: RAG 是什么?</h3>
+    <p><b>RAG(Retrieval-Augmented Generation,检索增强生成)</b> 是一种让大模型
+      <b>「先查资料、再写答案」</b>的技术。提问时,系统先到你的知识库里找出最相关的原文片段,
+      把它们和问题一起交给大模型,要求模型<b>只依据这些资料作答</b>,并在回答中标明出处。</p>
+    <div class="callout g">
+      🎯 <b>把它想成一个场景:</b> 一位记忆力超强但从不看书的专家(大模型),
+      你派一名助手(检索器)在你提问的瞬间去资料室(知识库)把相关书页(片段)搬来,
+      专家只看着书页回答,还告诉你内容出自哪本书第几页 —— 这就是 RAG。
+    </div>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">1</span>为什么需要 RAG?</h3>
+    <p>只用大模型对话(不带 RAG)有三个硬伤,而 RAG 恰好都能解决:</p>
+    <table class="cmp">
+      <tr><th style="width:150px">痛点</th><th>表现</th><th>RAG 的解法</th></tr>
+      <tr><td><b>知识幻觉</b></td><td>模型会一本正经地编造它不知道的事实</td>
+        <td>只依据你提供的资料回答,答不出的会说"资料里没有",不再瞎编</td></tr>
+      <tr><td><b>知识过时</b></td><td>训练数据截止于某个时间点</td>
+        <td>资料随传随用,最新公告、今天的文档都能立刻参与回答</td></tr>
+      <tr><td><b>没有私有数据</b></td><td>公司文档、教材、个人笔记不在模型知识里</td>
+        <td>资料只存在你本机,模型按需"查"它 —— 数据不出门,天然隐私</td></tr>
+    </table>
+    <div class="callout g">✅ <b>额外的收获 —— 可溯源:</b> 每个回答都带 [1][2] 编号和「文档 + 页码」,
+      你可以人工核对答案对不对,这在学习、写作、审计场景里价值巨大(微调做不到这一点)。</div>
+    <h4>RAG vs 微调(Finetune)</h4>
+    <table class="cmp">
+      <tr><th></th><th>RAG(检索增强)</th><th>微调</th></tr>
+      <tr><td>目标</td><td>让模型<u>知道/引用</u>你的资料</td><td>让模型<u>学会一种行为/风格</u>(如模仿客服口吻)</td></tr>
+      <tr><td>成本</td><td>只需文档,按需检索</td><td>需要标注数据 + GPU 训练</td></tr>
+      <tr><td>更新资料</td><td>上传新文档即生效(秒级)</td><td>每次都要重新训练</td></tr>
+      <tr><td>可溯源</td><td>可标注引用页码 ✅</td><td>不可溯源</td></tr>
+      <tr><td>适合</td><td>知识问答、资料整理(本应用场景)</td><td>风格迁移、专用格式输出</td></tr>
+    </table>
+    <p class="mini">工程上的最佳实践常常是「RAG 打底 + 微调调风格」,两者不冲突。</p>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">2</span>RAG 完整流水线(本应用的 5 个环节)</h3>
+    <ol>
+      <li><b>上传文档</b>(知识库页) → <b>解析</b>: PDF 逐页提取文字并记录页码、Word/网页提取正文;</li>
+      <li><b>分块 Chunking</b> → 把长文档切成 400 字左右的小块,块与块保留重叠;</li>
+      <li><b>嵌入 Embedding</b> → 每块文字经本地 bge 模型变成 512 维向量,连同原文存入向量库;</li>
+      <li><b>混合检索 Hybrid Retrieval</b>(问答时发生) → BM25 关键词 + 向量语义两路召回,RRF 融合排序;</li>
+      <li><b>生成 Generation</b> → 把命中的片段编号为 [1][2]… 拼进提示词,大模型依据它们流式作答并标注引用。</li>
+    </ol>
+    <p>前 3 步在文档上传时一次性完成(也叫<b>离线索引 Indexing</b>);
+      后 2 步发生在你每次提问时(也叫<b>在线推理 Inference</b>)。</p>
+    <div class="callout g">🔍 想亲眼看每个环节? 上传文档时盯住任务进度条(解析→分块→向量化→入库);
+      提问后点回答上方的「查看检索过程」,能看到两路检索各自的排名和融合分。</div>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">3</span>你(新手)需要先懂的最小知识清单</h3>
+    <ul>
+      <li><b>文档 ≠ 答案仓库:</b> 系统检索的最小单位是「分块」,不是整篇文档 —— 所以分块质量决定一切;</li>
+      <li><b>向量 = 文字的"语义指纹":</b> 意思相近的句子,向量也相近(数学上夹角小);</li>
+      <li><b>两个检索通道互补:</b> 关键词(精确) + 语义(灵活),RAG 生产环境几乎都用这种混合方案;</li>
+      <li><b>答案质量 = 检索质量 × 模型质量:</b> 检索不到,再强的模型也答不对 —— 排查问题时先看「查看检索过程」。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ ② 10 分钟上手 ============================ -->
+<section class="tut-sec" id="sec-handson">
+  <div class="tut-card anch">
+    <h3><span class="em">1</span>启动与首次准备(约 2 分钟)</h3>
+    <ol class="steps-t">
+      <li><b>双击根目录的 <code class="c">启动GreenRAG.bat</code></b> —— 首次运行请先跑
+        <code class="c">一键安装.bat</code>(自动创建虚拟环境、用<b>清华镜像</b>装齐依赖,约 5~15 分钟取决于网速)。</li>
+      <li>打开窗口后,程序会弹出<b>新手引导</b>。第一站: 点左侧「环境检查」→「重新检测」,
+        看到全绿 ✓ 就完成了(缺什么按条目右侧的国内镜像链接或复制命令补齐)。</li>
+      <li><b>嵌入模型</b>是唯一需要联网下载一次的组件(约 95MB,自动走 hf-mirror 国内镜像)。
+        若首次未下载,到「设置 → 嵌入模型」点「下载模型」。</li>
+    </ol>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">2</span>关于大模型: 两种选择(约 1 分钟)</h3>
+    <table class="cmp">
+      <tr><th style="width:170px">方案</th><th>怎么做</th><th>适合谁</th></tr>
+      <tr><td><b>内置演示模式</b>(默认)</td>
+        <td>什么都不用填。回答由模板生成,但<b>上传→检索→引用→分页标注</b>全流程真实可跑</td>
+        <td>第一次体验 / 没有 API Key</td></tr>
+      <tr><td><b>在线 API</b></td>
+        <td>「设置 → 大模型」选服务商预设(DeepSeek / 智谱 / 通义 / SiliconFlow / Ollama 等),
+          填入 API Key → 「测试连接」成功即可</td>
+        <td>想得到最强的智能回答(按量付费)</td></tr>
+      <tr><td><b>本地 GGUF 模型</b>(免费离线)</td>
+        <td>从 hf-mirror / ModelScope 下载 .gguf 放进 <code class="c">models/gguf</code>,
+          设置页勾选模型并调节「GPU 卸载层数」→ 启动。支持 NVIDIA 显卡加速</td>
+        <td>学生 / 隐私敏感 / 想完全离线,或想对比不同开源模型的效果</td></tr>
+    </table>
+    <div class="callout g">🖥️ <b>GGUF 本地推理小课堂:</b> GGUF 是 llama.cpp 使用的量化模型格式(4bit 等),
+      下载即用无需转格式。推理引擎 llama-server 是官方免编译程序: <b>有 NVIDIA 显卡装 CUDA 版</b>,
+      在设置里把「卸载层数」调到合适数值(0=纯CPU;模型不大就设满 99),模型权重就会放进显存,
+      速度通常比 CPU 快数倍;没有独显则自动用 CPU。显存占用可在任务管理器 → 性能 → GPU 查看。</div>
+    <div class="callout y">💰 国内推荐 <b>DeepSeek</b>(便宜好用)或智谱 GLM;两者都支持 OpenAI 兼容接口,
+      本应用预设已帮你填好地址和模型名。Ollama 则完全免费离线,适合学生党(需另装 Ollama)。</div>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">3</span>上传你的第一批文档(约 2 分钟)</h3>
+    <ol class="steps-t">
+      <li>进入「知识库」页,把 PDF / Word / TXT / Markdown 拖进虚线框(可多选),或粘贴网页链接回车;</li>
+      <li>看任务卡片跑完 <b>解析 → 分块 → 向量化 → 入库</b>;统计区出现「X 篇 / Y 个分块」即为成功;</li>
+      <li>点文档行「查看分块」: PDF 的每一块都标了<b>第几页</b> —— 这就是回答里"第 X 页"的来源;
+        用搜索框验证你的关键内容有没有被切进来;</li>
+      <li>点「打开原文」可随时用系统软件打开备份的原文件核对。</li>
+    </ol>
+    <div class="callout r">⚠️ 常见失败: 上传<b>扫描版 PDF</b>(纯图片)会提示"没有文字层"。程序暂不支持 OCR,
+      请用文字版 PDF(能选中文字的)、Word 或把内容存成 TXT。</div>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">4</span>提问并读懂一次回答(约 3 分钟)</h3>
+    <ol class="steps-t">
+      <li>进入「智能问答」,输入与文档有关的问题,回车;</li>
+      <li>观察回答中的 <b>[1] [2] 绿色角标</b>和下方的「答案引用的来源」卡片 ——
+        卡片上写着 <b>文档名 + 第几页</b>,点击即可在检索列表里定位到原文片段,验证答案是否忠于资料;</li>
+      <li>点「🔍 查看检索过程」: 这是全场最有教学价值的按钮。
+        你会看到<b>向量排名</b>(语义)和<b>关键词排名</b>(字面)常常不一致 —— 这正是混合检索存在的意义:</li>
+    </ol>
+    <table class="cmp">
+      <tr><th style="width:150px">你的问题</th><th>向量路擅长</th><th>BM25 路擅长</th></tr>
+      <tr><td>"用什么方法提高模型精度?"</td><td>✓ 找到"微调 / 增加训练数据"等<u>换说法</u>的段落</td>
+        <td>—(字面词没对上)</td></tr>
+      <tr><td>"GB/T 9704 是哪个标准?"</td><td>—(可能跑偏)</td><td>✓ 精确命中含"GB/T 9704"的段落</td></tr>
+    </table>
+    <div class="callout g">💡 <b>提问小技巧:</b> 问题越具体、越贴合文档里的措辞,命中率越高。
+      一次只问一个问题;答非所问时,先看「检索过程」是不是根本没命中,再决定换问法或调整参数。</div>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">5</span>遇到问题的排查顺序(FAQ 简版)</h3>
+    <ol>
+      <li>回答"没找到相关内容" → 打开「查看检索过程」看 <code class="c">最佳余弦</code>:
+        分数低说明文档里确实没有 / 问法差异太大;分数高却答没找到 → 调低「无相关判定阈值」;</li>
+      <li>检索有命中但回答质量差 → 试试真实大模型(而非演示模式),或在设置里调大 top_k;</li>
+      <li>改了分块大小没效果 → 改完后需要到知识库页「重建全部索引」才会生效(界面会提示);</li>
+      <li>上传很慢 / 卡住 → 首次向量化要加载模型(10~60 秒),看任务卡片的实时进度;笔记本可用 CPU 跑,慢是正常的。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================ ③ 参数调优 ============================ -->
+<section class="tut-sec" id="sec-params">
+  <div class="tut-card anch">
+    <h3><span class="em">1</span>最重要的一组: 分块参数</h3>
+    <p>文档先切成块再向量化。块的大小决定「检索的瞄准镜」有多宽:</p>
+    <table class="cmp">
+      <tr><th>参数</th><th>当前默认</th><th>调小 →</th><th>→ 调大</th></tr>
+      <tr><td><b>chunk_size</b> 分块大小</td><td>400 字</td>
+        <td>命中更精准、引用页码更精确,但上下文碎片化(要点可能被切散)</td>
+        <td>上下文完整连贯,但一个块里话题混杂,检索容易"瞄不准"</td></tr>
+      <tr><td><b>overlap</b> 重叠</td><td>80 字</td>
+        <td>块之间几乎无冗余</td>
+        <td>答案"正好骑在切缝上"的概率更低,代价是少量重复存储</td></tr>
+    </table>
+    <p class="mini"><b>实验建议:</b> 一般文档 300~600 字是甜区;代码/合同条款适合 200~300;
+      章节式长文可到 800。每次只改一个参数 → 重建索引 → 用 5 个问题对比效果,这就是最朴素的 A/B 实验。</p>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">2</span>检索与生成参数</h3>
+    <table class="cmp">
+      <tr><th>参数</th><th>默认</th><th>作用 / 什么时候动它</th></tr>
+      <tr><td><b>top_k</b> 送入模型的片段数</td><td>6</td>
+        <td>每个问题带几块原文给模型。问"综述型"问题调到 8~10;问"找一句话"可以 3~4。越大越占上下文、越慢</td></tr>
+      <tr><td><b>bm25_top / dense_top</b> 各路召回数</td><td>100</td>
+        <td>混合检索内部"海选"名额。库很大(万级块)时可适当调大;通常不必动</td></tr>
+      <tr><td><b>RRF 常数 k</b></td><td>60</td>
+        <td>融合时对排名的重视程度。经验值 60,新手不建议动</td></tr>
+      <tr><td><b>无相关判定阈值</b></td><td>0.32</td>
+        <td>最佳余弦相似度低于它 → 判定"知识库里没有相关内容"。资料确实没有时调低会"硬凑",资料有但答不出时调低一点有帮助</td></tr>
+      <tr><td><b>temperature</b></td><td>0.3</td>
+        <td>生成随机性。知识问答保持 ≤0.5 更严谨;做头脑风暴可以调高</td></tr>
+      <tr><td><b>多轮上下文</b></td><td>2 轮</td>
+        <td>允许几轮追问。调 0 则每问独立(适合考试式出题);调大更省心但更占上下文</td></tr>
+      <tr><td><b>max_tokens</b></td><td>1200</td>
+        <td>回答长度上限。需要长篇总结时调大</td></tr>
+      <tr><td><b>仅知识库回答</b>(问答页开关)</td><td>开</td>
+        <td>开 = 严格依据资料(防幻觉、可溯源);关 = 允许模型补充自身知识并标注区分</td></tr>
+    </table>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">3</span>嵌入模型选择</h3>
+    <ul>
+      <li><b>本地 bge-small-zh-v1.5(默认)</b>: 95MB,CPU 可跑,中文效果好,完全免费离线 —— 个人学习首选;</li>
+      <li><b>API 嵌入</b>: 想要更强语义理解(或嫌本地占资源)时,可用智谱 embedding-3、OpenAI text-embedding-3 等。
+        ⚠ DeepSeek 官方不提供 embedding,选它当对话模型时嵌入仍要用本地模型 —— 两者互不影响,本应用默认就是这个组合。</li>
+    </ul>
+    <div class="callout g">换嵌入模型/分块参数后,记得「重建全部索引」;不同参数组合产出的向量不通用。</div>
+  </div>
+</section>
+
+<!-- ============================ ④ 进阶原理 ============================ -->
+<section class="tut-sec" id="sec-adv">
+  <div class="tut-card anch">
+    <h3><span class="em">1</span>嵌入(Embedding)与余弦相似度</h3>
+    <p>嵌入模型把一段文字压成一个 <b>512 维向量</b>(一串小数)。同一模型编码的句子,
+      语义越接近,向量"方向"越一致。检索时把问题也编码成向量,计算它与库中每个向量的夹角余弦:</p>
+    <div class="formula">cosine_similarity(A, B) = (A·B) / (|A|·|B|) ∈ [−1, 1]</div>
+    <p>接近 1 → 语义高度相关。向量检索可以理解为: <b>在几千个"句子方向"里找指向最接近问题的那些</b>。
+      注意它比较的是<b>整块文字的整体语义</b>,所以"块太大、话题太杂"会稀释相似度 —— 这就是分块重要的原因。</p>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">2</span>BM25: 经典的关键词检索</h3>
+    <p>BM25 是搜索引擎的常青树算法。它对每个词打分,综合考虑:
+      <b>词频</b>(出现次数)、<b>逆文档频率</b>(越稀有的词越值钱)、<b>长度归一化</b>(越长的文档词频越要打折)。</p>
+    <div class="formula">score(D,Q) = Σ (词i在D中频率的加权) × IDF(词i)</div>
+    <p>中文无法按空格分词,所以需要 <b>jieba 分词</b>先切词。BM25 完全基于字面:
+      问"深度学习和机器学习区别",它能命中含这些术语的段落,但找不到只写"神经网络 vs 决策树"的段落 ——
+      那是向量检索的主场。</p>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">3</span>混合检索与 RRF 融合</h3>
+    <p>既然两条路各有盲区,工业界标准做法是<b>都跑,再融合</b>。本应用用 RRF(Reciprocal Rank Fusion,
+      倒数排名融合)—— 不看原始分数(两种分数不可比!),只看<b>各自榜单里的名次</b>:</p>
+    <div class="formula">RRF(块x) = 1/(k + 名次ᵃᵢ) + 1/(k + 名次ᵇᵢ),其中名次从 0 开始,k = 60</div>
+    <p>一个块只有在<b>至少一路</b>里排名很靠前才能得高分,两路都靠前则几乎必进 top_k。
+      <b>排名融合的好处:</b> 绕开了"BM25 分数与余弦相似度单位不同、不能直接相加"的问题。
+      在「问答」页的检索过程面板里,你能看到每个候选块的 <code class="c">向量#n / 关键词#n / RRF 分</code>,
+      自己手算一遍就能彻底理解。</p>
+    <table class="cmp">
+      <tr><th>候选块</th><th>向量名次</th><th>关键词名次</th><th>RRF = 1/(60+r₁) + 1/(60+r₂)</th></tr>
+      <tr><td>块 A</td><td>#1</td><td>#3</td><td>0.0164 + 0.0159 ≈ 0.032</td></tr>
+      <tr><td>块 B</td><td>#45</td><td>未召回</td><td>0.0095(只有一路)</td></tr>
+    </table>
+    <p class="mini">结论: 块 A 两路都靠前 → 总分最高。块 B 语义沾边但没命中关键词,得分骤降 —— 融合会"惩罚"只有单路支持的结果。</p>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">4</span>提示词组装: 答案与引用是怎么来的</h3>
+    <p>后端把检索结果拼成「参考资料区」,并给模型立下规则(在「设置 → 自定义提示词」可以追加自己的要求):</p>
+    <div class="formula">[1] 来源: 《深度学习入门》第23页
+内容: (原文片段…)
+
+[2] 来源: 《…》第45-46页
+内容: (原文片段…)
+
+系统规则: 只能依据以上资料回答;用到哪条资料就在对应句末标 [编号];
+资料与问题无关时,回答:知识库中暂未找到相关内容。</div>
+    <p>回答结束后,程序扫描输出里的 <code class="c">[n]</code>,对照资料表生成「来源卡片」。
+      这就是你看到"第 X 页"的完整链路 —— <b>没有页码标记的 PDF 或网页,则只标注文档名</b>(Word/网页没有真实的"页"概念)。</p>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">5</span>下一步可以学什么</h3>
+    <ul>
+      <li><b>重排序 Rerank</b>: 先用轻量检索召回 50~100 条,再用交叉编码器精排 top_k —— 精度再上一个台阶(本应用把两路名次融合,已内含"重排"思想);</li>
+      <li><b>查询改写</b>: 复杂问题先让模型拆成多个子查询,分别检索再汇总;</li>
+      <li><b>评估</b>: 准备 20~50 个(问题, 期望段落)对,算命中率 —— 参数怎么调,用数据说话;</li>
+      <li><b>向量数据库</b>: 数据量到几十万分块后,本应用的纯 NumPy 检索会变慢,可迁移 FAISS / Milvus 等。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================ ⑤ FAQ / 术语 ============================ -->
+<section class="tut-sec" id="sec-faq">
+  <div class="tut-card anch">
+    <h3><span class="em">?</span>常见问题 FAQ</h3>
+    <h4>模型 / 连接</h4>
+    <ul>
+      <li><b>回答显示"尚未配置大模型 API"?</b> 到「设置 → 大模型」选预设填 Key 并「测试连接」;
+        先用「内置演示模式」也能体验完整流程。</li>
+      <li><b>DeepSeek Key 填了还报错?</b> 确认选的是 OpenAI 兼容预设、模型名是 deepseek-chat;
+        DeepSeek 无 embedding 不影响使用(嵌入默认本地模型)。</li>
+      <li><b>Ollama 怎么用?</b> 安装 Ollama → 命令行拉取模型(如 ollama pull qwen2.5:7b) →
+        在预设里选「Ollama(本地)」,base_url 填 http://localhost:11434/v1。</li>
+      <li><b>怎么用本地 GGUF 模型?</b> ①「环境检查」页按 GGUF 引擎条目下载 llama-server.exe 放进 models/llama;
+        ② 下载 .gguf 模型(见设置页 GGUF 面板的国内镜像链接)放进 models/gguf;
+        ③ 「设置 → 大模型」切到「本地 GGUF」,选模型 → 调 GPU 卸载层数 → 「▶ 启动模型」。
+        首次提问即走完整 RAG 链路,回答同样标注文档与页码。</li>
+      <li><b>GPU 卸载怎么判断该设多少?</b> 设置页会显示你的显卡型号与显存。0 = 纯 CPU;把层数设满 =
+        整个模型放进显存(推荐,前提是显存放得下: 7B 量化模型约 4~6GB)。显存不足时降低层数即可,
+        程序会在下次启动时自动应用。</li>
+    </ul>
+    <h4>文档 / 知识库</h4>
+    <ul>
+      <li><b>为什么 PDF 能标页码,Word 不能?</b> PDF 是版式文档,天然有页;Word 是流式文档,
+        程序没做排版引擎,无法知道内容落在第几页 —— 这是业界普遍做法。</li>
+      <li><b>上传重复了?</b> 程序按内容哈希自动跳过重复文档,先删除旧文档即可重新上传。</li>
+      <li><b>.doc 老格式为什么不行?</b> 格式闭源难解析。用 Word/WPS「另存为 .docx」即可。</li>
+    </ul>
+    <h4>回答质量</h4>
+    <ul>
+      <li><b>答非所问?</b> 90% 是检索没命中。看「查看检索过程」: 余弦都很低 → 换问法或文档没内容;
+        排名正常但答案差 → 换真实大模型 / 调大 top_k。</li>
+      <li><b>答案与原文不一致?</b> 点击来源卡片核对原文;仍不符就把「温度」降到 0.1~0.2,
+        并保持「仅知识库回答」开启。</li>
+      <li><b>检索速度?</b> 个人级(几千块)毫秒级;块数达几十万后建议换专业向量库(见进阶篇)。</li>
+    </ul>
+    <h4>环境 / 安装</h4>
+    <ul>
+      <li><b>国内下载太慢?</b> 所有 Python 依赖安装都走清华镜像(一键安装.bat);
+        模型走 hf-mirror;仍失败可用 ModelScope 魔搭(见环境检查页的复制命令)。</li>
+      <li><b>无法从微软商店下载 / 一运行就弹微软商店?</b> GreenRAG 的所有依赖都不需要微软商店。
+        弹商店通常是因为系统只装了"商店版 Python 占位符": 到「设置 → 应用 → 高级应用设置 → 应用执行别名」关闭 python.exe / python3.exe 两个开关,
+        再到「环境检查」页点 Python 条目右侧的<b>国内直链</b>(华为云 / npmmirror 独立安装包)重装即可;
+        WebView2 与 VC++ 运行库提供的也是独立 exe 直链与 winget 命令,同样不经过商店。</li>
+      <li><b>双击 bat 一闪而过?</b> 在资源管理器地址栏输入 cmd 回车,把 bat 拖进去回车,看报错;或右键「用终端打开」。</li>
+      <li><b>想用浏览器打开?</b> pywebview 不可用时程序会自动改用浏览器;也可命令行 python app.py --browser。</li>
+      <li><b>数据备份/迁移?</b> 整个 <code class="c">data/</code> 文件夹即全部数据(文档备份+向量库+配置),拷走即可。</li>
+    </ul>
+  </div>
+
+  <div class="tut-card anch">
+    <h3><span class="em">T</span>术语表</h3>
+    <div class="term"><b>RAG</b><p>Retrieval-Augmented Generation,先检索资料再让模型作答的技术范式。</p></div>
+    <div class="term"><b>Ingestion(文档摄入)</b><p>上传 → 解析 → 分块 → 向量化 → 入库的离线流程。</p></div>
+    <div class="term"><b>Chunk / Chunking(分块)</b><p>把文档切成可检索的小段;分块策略直接影响检索精度。</p></div>
+    <div class="term"><b>Embedding(嵌入)</b><p>把文本映射成向量。语义越近向量越近,是向量检索的基础。</p></div>
+    <div class="term"><b>向量库 / 稠密检索</b><p>存向量的仓库;按余弦相似度找"语义最近"的块。</p></div>
+    <div class="term"><b>BM25 / 稀疏检索</b><p>经典关键词打分算法;精确匹配术语与编号。</p></div>
+    <div class="term"><b>Hybrid Retrieval(混合检索)</b><p>稀疏 + 稠密同时召回再融合,兼顾精确与语义。</p></div>
+    <div class="term"><b>RRF</b><p>倒数排名融合: 1/(k+rank) 相加,融合两个排名榜单。</p></div>
+    <div class="term"><b>Rerank(重排)</b><p>用更强的模型对召回结果二次精排(进阶功能)。</p></div>
+    <div class="term"><b>Prompt(提示词)</b><p>发给模型的指令文本;RAG 的提示词内含"参考资料 + 引用规则"。</p></div>
+    <div class="term"><b>上下文窗口</b><p>模型一次能"看到"的 token 上限;分块 top_k 都会占用它。</p></div>
+    <div class="term"><b>幻觉 Hallucination</b><p>模型生成无依据内容;RAG + 引用机制是主要防线。</p></div>
+  </div>
+</section>
+
+<script>
+  const tabs = document.querySelectorAll(".tut-tab");
+  tabs.forEach((t) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.remove("on"));
+    t.classList.add("on");
+    document.querySelectorAll(".tut-sec").forEach((s) => s.classList.remove("on"));
+    document.getElementById(t.dataset.sec).classList.add("on");
+    scrollTo(0, 0);
+  }));
+  function go(v) { parent.postMessage({ grNavigate: v }, "*"); }
+  // 主界面“图文详解”跳转 → 定位到对应章节
+  window.addEventListener("message", (ev) => {
+    const a = ev.data && ev.data.anchor;
+    if (!a) return;
+    const tabOf = { sec_what_: "sec-what" };
+    const el = document.getElementById(a);
+    const tab = el ? el.closest(".tut-sec") : null;
+    if (tab) {
+      tabs.forEach((x) => x.classList.toggle("on", x.dataset.sec === tab.id));
+      document.querySelectorAll(".tut-sec").forEach((s) => s.classList.toggle("on", s === tab));
+    }
+    setTimeout(() => { (el || tab || document.body).scrollIntoView({ behavior: "smooth" }); }, 120);
+  });
+</script>
+</body>
+</html>

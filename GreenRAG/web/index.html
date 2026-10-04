@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GreenRAG · 混合检索知识库学习助手</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2376B900'/%3E%3Cpath d='M9 21V11l7 6 7-6v10' stroke='white' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ======================= 侧边栏 ======================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M5 16V8l7 6 7-6v8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="logo-text">
+        <b>GreenRAG</b>
+        <span>混合检索 · RAG 学习助手</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <a class="nav-item" href="#home" data-view="home">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+        <span>工作台</span>
+      </a>
+      <a class="nav-item" href="#kb" data-view="kb">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5.2" rx="7.2" ry="2.7"/><path d="M4.8 5.2v13.6c0 1.5 3.2 2.7 7.2 2.7s7.2-1.2 7.2-2.7V5.2"/><path d="M4.8 12c0 1.5 3.2 2.7 7.2 2.7s7.2-1.2 7.2-2.7"/></svg>
+        <span>知识库</span>
+      </a>
+      <a class="nav-item" href="#chat" data-view="chat">
+        <svg viewBox="0 0 24 24"><path d="M20 11.5a7.6 7.6 0 0 1-8 7.5c-1 0-2-.2-2.9-.5L4.5 20l1.3-3.4A7.6 7.6 0 1 1 20 11.5Z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" stroke-linecap="round" stroke-width="2.2"/></svg>
+        <span>智能问答</span>
+      </a>
+      <a class="nav-item" href="#env" data-view="env">
+        <svg viewBox="0 0 24 24"><path d="M12 3 5 5.6v5.3c0 4.5 3 8.4 7 10 4-1.6 7-5.5 7-10V5.6L12 3Z"/><path d="m9 12 2 2 4-4.5"/></svg>
+        <span>环境检查</span>
+      </a>
+      <a class="nav-item" href="#settings" data-view="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.1 1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.01a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/></svg>
+        <span>设置</span>
+      </a>
+      <a class="nav-item" href="#tutorial" data-view="tutorial">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3.5H6.5A2.5 2.5 0 0 0 4 6v13.5Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8h6.5M9 12h6.5"/></svg>
+        <span>学习教程</span>
+        <em class="nav-badge">新</em>
+      </a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="env-chip" id="sideEnvChip" title="环境就绪状态">
+        <span class="dot" id="sideEnvDot"></span><span id="sideEnvText">检测中…</span>
+      </div>
+      <button class="btn-ghost sm" id="btnGuideReopen">▶ 新手引导</button>
+    </div>
+  </aside>
+
+  <!-- ======================= 主区域 ======================= -->
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb">
+        <h1 id="pageTitle">工作台</h1>
+        <p id="pageSub"></p>
+      </div>
+      <div class="top-status">
+        <div class="gpu-island" id="gpuIsland">
+          <button class="gi-pill" id="giPill" title="GPU 实时状态(点击展开)">
+            <span class="gi-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="7.2" width="18" height="9.6" rx="2.2"/><rect x="6.4" y="10" width="1.9" height="4" rx="0.8"/><rect x="10.2" y="10" width="1.9" height="4" rx="0.8"/><rect x="14" y="10" width="1.9" height="4" rx="0.8"/><circle cx="18.6" cy="15.3" r="1.2" fill="#fff"/></svg>
+            </span>
+            <span class="gi-main" id="giMain">GPU 检测中…</span>
+            <span class="gi-dot" id="giDot"></span>
+          </button>
+          <div class="gi-panel" id="giPanel" hidden>
+            <div class="gi-panel-head">
+              <b id="giTitle">GPU 实时状态</b>
+              <span class="hint" id="giSub"></span>
+            </div>
+            <div id="giBody"></div>
+            <div class="gi-panel-foot">
+              <a href="#settings">⚙ GPU 卸载设置</a>
+              <button class="btn ghost sm" id="giRefresh">↻</button>
+            </div>
+          </div>
+        </div>
+        <div class="chip" id="chipEmbed" title="嵌入模型状态"></div>
+        <div class="chip" id="chipLlm" title="大模型状态"></div>
+        <button class="btn-outline sm icon" id="btnOpenData" title="打开数据目录(data/)">
+          <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="content" id="content">
+
+      <!-- ====================== 视图: 工作台 ====================== -->
+      <section class="view" id="view-home">
+        <div class="hero">
+          <div class="hero-txt">
+            <span class="hero-kicker">PERSONAL RAG STUDIO · 个人级混合检索知识库</span>
+            <h2>把文档变成可对话的私人知识库</h2>
+            <p>上传 PDF / Word / 网页 → 自动解析分块 → 混合检索(BM25 + 向量)→ 大模型生成带引用的精准回答。
+               界面内置讲解与教程,新手也能一边用、一边学会 RAG 的每一步。</p>
+            <div class="hero-actions">
+              <button class="btn primary" id="heroGoChat" disabled>开始提问</button>
+              <button class="btn outline" id="heroGoKb">上传第一篇文档</button>
+              <button class="btn ghost" id="heroGoTut">📖 先看教程</button>
+            </div>
+          </div>
+          <svg class="hero-deco" viewBox="0 0 220 220" aria-hidden="true">
+            <defs>
+              <linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#76B900"/><stop offset="100%" stop-color="#a8d94a"/>
+              </linearGradient>
+            </defs>
+            <circle cx="110" cy="110" r="96" fill="none" stroke="#e9f2d4" stroke-width="2"/>
+            <circle cx="110" cy="110" r="74" fill="none" stroke="#dcebc0" stroke-width="2" stroke-dasharray="4 7"/>
+            <g fill="none" stroke="url(#hg)" stroke-width="3" stroke-linecap="round">
+              <path d="M110 110 56 74"/><path d="M110 110 164 62"/><path d="M110 110 176 140"/><path d="M110 110 52 158"/>
+            </g>
+            <g fill="#fff" stroke="#76B900" stroke-width="2.5">
+              <circle cx="110" cy="110" r="13"/>
+            </g>
+            <g fill="#76B900">
+              <circle cx="56" cy="74" r="7"/><circle cx="164" cy="62" r="7"/><circle cx="176" cy="140" r="7"/><circle cx="52" cy="158" r="7"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="grid stats" id="homeStats"></div>
+
+        <div class="flow-card card">
+          <div class="card-head">
+            <h3>RAG 流水线 <span class="tag">核心概念</span></h3>
+            <button class="btn ghost sm" onclick="gotoTut('sec-what')">图文详解 →</button>
+          </div>
+          <div class="flow" id="homeFlow"></div>
+        </div>
+
+        <div class="grid cols-12">
+          <div class="card span-7">
+            <div class="card-head"><h3>新手五步走</h3><span class="hint" id="homeStepsHint"></span></div>
+            <ol class="steps" id="homeSteps"></ol>
+          </div>
+          <div class="card span-5">
+            <div class="card-head"><h3>知识库速览</h3></div>
+            <div id="homeKbMin"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================== 视图: 知识库 ====================== -->
+      <section class="view" id="view-kb">
+        <div class="help-card card">
+          <div class="help-head" data-target="help-kb">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v5"/><path d="M12 7.4h.01"/></svg>
+            <div><b>本页功能说明</b><span>点一下展开 —— 每个按钮在做什么、对应 RAG 的哪个环节</span></div>
+          </div>
+          <div class="help-body" id="help-kb">
+            <ol>
+              <li><b>上传文档 / 粘贴网页链接</b> —— RAG 的第 1 步「文档摄入」：程序解析 PDF(逐页提取文字)、Word、TXT、Markdown、HTML 与网页正文。</li>
+              <li><b>自动分块</b> —— 解析出的文字按「分块大小」切成一段段(默认 400 字),块与块间有重叠,防止答案被切断。每块会记住它来自哪篇文档、哪个页码。</li>
+              <li><b>向量化</b> —— 每块文字交给嵌入模型转成 512 维向量,连同原文一起入库。上传窗口会实时显示每个环节的进度。</li>
+              <li><b>提问前先看统计</b> —— 右上角显示文档数、分块数。分块数太少说明文档还没入库完成。</li>
+              <li><b>管理文档</b> —— 每一行可「查看分块」(检查切分效果,搜索定位关键词)、「打开原文」(系统默认软件打开备份)、「删除」(彻底移除)。</li>
+              <li><b>重建索引</b> —— 在「设置」里改过分块大小/重叠后,旧块与新参数不一致,会出现提示条,点它按新参数重新分块入库。</li>
+            </ol>
+            <p class="learn-tip">💡 学习点：文档摄入(Ingestion)质量决定检索上限 —— PDF 是扫描件没有文字层时无法解析(本应用暂不支持 OCR),请使用文字版 PDF 或 Word。</p>
+          </div>
+        </div>
+
+        <div class="card upload-card" id="uploadCard">
+          <input type="file" id="fileInput" multiple hidden
+                 accept=".pdf,.docx,.txt,.md,.markdown,.html,.htm">
+          <div class="dropzone" id="dropzone">
+            <div class="dz-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0 4.5 4.5M12 4 7.5 8.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></svg>
+            </div>
+            <div class="dz-txt">
+              <b>拖拽文件到这里,或 <span class="link">点击选择</span></b>
+              <p>支持 PDF / Word(.docx) / TXT / Markdown / HTML,可多选 · 单个上限 512MB</p>
+            </div>
+            <div class="dz-right">
+              <span class="hint">RAG 环节①文档摄入</span>
+            </div>
+          </div>
+          <div class="url-row">
+            <svg viewBox="0 0 24 24"><path d="M10 13.5a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 10.5a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            <input type="text" id="urlInput" placeholder="粘贴网页链接(https://…),回车即可抓取正文入库">
+            <button class="btn primary sm" id="btnFetchUrl">抓取网页</button>
+          </div>
+        </div>
+
+        <div id="taskArea"></div>
+
+        <div class="card" id="kbMainCard">
+          <div class="card-head">
+            <h3>知识库文档 <span class="tag" id="kbCount">0 篇</span></h3>
+            <div class="head-right">
+              <span class="hint" id="kbStale"></span>
+              <button class="btn outline sm" id="btnReindex" title="按当前分块/嵌入设置重建全部索引">重建全部索引</button>
+              <button class="btn ghost sm" id="btnRefreshDocs">刷新</button>
+            </div>
+          </div>
+          <div id="kbEmpty" class="empty">
+            <svg viewBox="0 0 24 24"><path d="M4 7V5.5A2.5 2.5 0 0 1 6.5 3H20v13.5a2.5 2.5 0 0 1-2.5 2.5H6.5A2.5 2.5 0 0 0 4 16.5V7Z"/><path d="M4 16.5A2.5 2.5 0 0 0 6.5 19H20"/></svg>
+            <b>知识库还是空的</b>
+            <p>在上方拖入一份 PDF 或 Word,观察右下角任务进度条 —— 你会看到「解析 → 分块 → 向量化 → 入库」四个环节依次跑完。</p>
+          </div>
+          <div class="doc-list" id="docList" hidden></div>
+        </div>
+      </section>
+
+      <!-- ====================== 视图: 问答 ====================== -->
+      <section class="view" id="view-chat">
+        <div class="help-card card compact">
+          <div class="help-head" data-target="help-chat">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v5"/><path d="M12 7.4h.01"/></svg>
+            <div><b>本页功能说明</b><span>问答 = 检索 + 生成。回答下方的引用编号,会标出「出自哪篇文档的哪一页」</span></div>
+          </div>
+          <div class="help-body" id="help-chat">
+            <ol>
+              <li><b>输入问题,回车提问</b>。程序会先把问题转成向量,同时在全部文档分块里做混合检索,选出最相关的片段。</li>
+              <li><b>查看检索过程</b>(回答上方按钮): 每一条命中都标注了「向量排名 / 关键词排名 / 融合分」,这是理解混合检索最好的窗口。</li>
+              <li><b>引用溯源</b>: 回答中带 [1] [2] 的位置,点击下方来源卡片即可看到原文片段;PDF 会精确到页码。</li>
+              <li><b>仅知识库回答</b> 开关: 开启时模型只依据你的文档作答,超出资料的内容会如实告诉你「没找到」。</li>
+              <li><b>换一批参数</b>? 片段数量(top_k)、是否携带多轮对话等在「设置」页调整。</li>
+            </ol>
+            <p class="learn-tip">💡 学习点: 这个页面就是 RAG 的 ② 检索(Retrieval)与 ③ 生成(Generation)。多问几轮,对比不同 top_k 下回答质量的差别。</p>
+          </div>
+        </div>
+
+        <div class="chat-shell card" id="chatShell">
+          <div class="chat-banner" id="chatBanner">
+            <div class="cb-icon"><svg viewBox="0 0 24 24"><path d="M12 3 5 5.6v5.3c0 4.5 3 8.4 7 10 4-1.6 7-5.5 7-10V5.6L12 3Z"/></svg></div>
+            <div>
+              <b id="chatBannerTitle">知识库就绪,开始提问吧</b>
+              <p id="chatBannerSub"></p>
+            </div>
+          </div>
+          <div class="chat-log" id="chatLog">
+            <div class="chat-empty" id="chatEmpty">
+              <svg viewBox="0 0 24 24"><path d="M20 11.5a7.6 7.6 0 0 1-8 7.5c-1 0-2-.2-2.9-.5L4.5 20l1.3-3.4A7.6 7.6 0 1 1 20 11.5Z"/></svg>
+              <b>从知识库里找答案</b>
+              <p>试试问: 你上传的文档里写了什么?</p>
+              <div class="chips" id="suggChips"></div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <label class="switch-inline" title="开启后,模型只依据知识库内容回答">
+              <input type="checkbox" id="kbOnlyToggle" checked><span class="sw"></span>仅知识库回答
+            </label>
+            <div class="chat-input">
+              <textarea id="chatInput" rows="1" placeholder="输入问题,Enter 发送 · Shift+Enter 换行"></textarea>
+              <button class="btn primary round" id="btnSend" title="发送">
+                <svg viewBox="0 0 24 24"><path d="M4.5 11.5 20 4l-7.5 15.5-2-6.5-6-1.5Z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================== 视图: 环境检查 ====================== -->
+      <section class="view" id="view-env">
+        <div class="help-card card compact">
+          <div class="help-head" data-target="help-env">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v5"/><path d="M12 7.4h.01"/></svg>
+            <div><b>本页功能说明</b><span>逐项列出运行 GreenRAG 所需的环境;缺失项旁边有「国内镜像下载链接」与「一键复制安装命令」</span></div>
+          </div>
+          <div class="help-body" id="help-env">
+            <ol>
+              <li>点击 <b>重新检测</b> 刷新全部检查项(结果只读本机,不上传任何数据)。</li>
+              <li>红色 ❌ 的项目按 <b>「必须补齐」</b> 处理 —— 点它右侧的按钮: 链接类会打开下载页,命令类会复制到剪贴板,粘贴到「命令提示符 / PowerShell」回车即可。</li>
+              <li><b>最省事方案</b>: 直接双击项目根目录的 <code>一键安装.bat</code>,它会自动创建虚拟环境并用国内镜像装齐所有 Python 依赖。</li>
+              <li>绿色 ✓ 表示该项满足。黄色 ⚠️ 表示非必需(不影响使用)。</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="env-head card" id="envHead"></div>
+        <div class="env-groups" id="envGroups"></div>
+      </section>
+
+      <!-- ====================== 视图: 设置 ====================== -->
+      <section class="view" id="view-settings">
+        <div class="help-card card compact">
+          <div class="help-head" data-target="help-settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10v5"/><path d="M12 7.4h.01"/></svg>
+            <div><b>本页功能说明</b><span>所有可调参数都在这里,每个参数旁边都有说明。修改自动保存,无需点保存按钮</span></div>
+          </div>
+          <div class="help-body" id="help-settings">
+            <ol>
+              <li><b>大模型</b>: 选择服务商预设(DeepSeek/智谱/Ollama…),填入你的 API Key 即可。没有密钥可以先选「内置演示模式」体验全流程。</li>
+              <li><b>嵌入模型</b>: 默认本地 bge-small-zh-v1.5(约 95MB,一次下载永久离线使用)。也可以用 API 模式调用服务商的 embedding 接口。</li>
+              <li><b>分块与检索</b>: chunk_size / top_k 是最常用的两个参数,决定"一次喂给模型多少原文"。</li>
+              <li><b>网络</b>: HF 镜像开关默认开启(国内下载模型必需)。</li>
+              <li>每个参数改完即自动保存,右上角出现「已保存」提示。</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="settings-grid">
+          <!-- 大模型 -->
+          <div class="card s-card" id="sec-llm">
+            <div class="card-head"><h3>① 大模型(对话生成)</h3><span class="tag">Augmented Generation</span></div>
+            <div class="s-row">
+              <label class="s-lbl">服务商预设
+                <span class="hint">常用国内服务商,一键填充地址与模型名</span></label>
+              <div class="s-ctl">
+                <select id="sllmPreset">
+                  <option value="">— 手动填写 / 使用演示模式 —</option>
+                </select>
+              </div>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">运行模式</label>
+              <div class="s-ctl radio-line">
+                <label><input type="radio" name="llmProvider" value="openai_compat"><span>在线 API(OpenAI 兼容)</span></label>
+                <label><input type="radio" name="llmProvider" value="gguf"><span>本地 GGUF 模型(免费离线)</span></label>
+                <label><input type="radio" name="llmProvider" value="mock"><span>内置演示模式(无需密钥)</span></label>
+              </div>
+            </div>
+            <div class="s-group" id="sllmApiBox">
+              <div class="s-row">
+                <label class="s-lbl">接口地址 base_url</label>
+                <div class="s-ctl"><input id="sllmBase" placeholder="https://api.deepseek.com/v1">
+                  <p class="field-note">必须是 OpenAI 兼容格式,以 /v1 结尾;Ollama 填 http://localhost:11434/v1</p>
+                </div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">API Key</label>
+                <div class="s-ctl"><input id="sllmKey" type="password" placeholder="sk-…">
+                  <p class="field-note">只保存在本机 data/config.json,不上传任何第三方服务器</p>
+                </div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">模型名称</label>
+                <div class="s-ctl"><input id="sllmModel" placeholder="deepseek-chat"></div>
+              </div>
+            </div>
+            <div class="s-group" id="ggufBox" hidden>
+              <div class="s-row">
+                <label class="s-lbl">GGUF 模型文件<br>
+                  <span class="hint">把网上下载的 .gguf 放进 models/gguf 后点刷新</span></label>
+                <div class="s-ctl">
+                  <div class="inline-ctl">
+                    <select id="sggufModel"><option value="">— 没有找到模型,请先下载 —</option></select>
+                    <button class="btn outline sm" id="btnGgufScan">↻ 刷新</button>
+                    <button class="btn ghost sm" id="btnGgufOpenDir">打开文件夹</button>
+                  </div>
+                  <p class="field-note">新手先用小模型试流程: Qwen2.5-0.5B(约0.4GB)、1.5B(约1.1GB);7B 约 4.7GB,需要更多内存/显存</p>
+                </div>
+              </div>
+              <div class="model-status" id="ggufEngineStatus">
+                <span class="hint">正在读取引擎状态…</span>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl" id="sggufGpuLbl">GPU 型号检测中…</label>
+                <div class="s-ctl"><input type="range" id="sggufLayers" min="0" max="99" step="1">
+                  <div class="range-val" id="sggufLayersV"></div>
+                  <p class="field-note" id="sggufLayersNote"></p>
+                </div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">上下文长度 n_ctx<br><span class="hint">越大占越多显存/内存,问答一般 4096 够用</span></label>
+                <div class="s-ctl"><input type="number" id="sggufCtx" min="512" max="65536" step="512"></div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">模型文件夹<br><span class="hint">可指向你存放 GGUF 的其它目录</span></label>
+                <div class="s-ctl"><input id="sggufDir" placeholder="留空 = 项目 models/gguf"></div>
+              </div>
+              <div class="s-actions">
+                <button class="btn primary sm" id="btnGgufStart">▶ 启动模型</button>
+                <button class="btn outline sm" id="btnGgufStop">⏹ 停止模型(释放显存)</button>
+                <button class="btn ghost sm" id="btnGgufHow">引擎怎么装? 去环境检查</button>
+              </div>
+              <div id="ggufTaskArea"></div>
+              <details class="adv">
+                <summary>下载 GGUF 模型的途径(国内镜像)</summary>
+                <p class="field-note" style="padding:4px 13px 12px">
+                  ① hf-mirror(推荐): 访问
+                  <a href="https://hf-mirror.com/Qwen/Qwen2.5-0.5B-Instruct-GGUF" target="_blank" rel="noreferrer">hf-mirror.com/Qwen/Qwen2.5-0.5B-Instruct-GGUF</a>
+                  ,下载 qwen2.5-0.5b-instruct-q4_k_m.gguf;<br>
+                  ② ModelScope 魔搭: <a href="https://modelscope.cn/models?name=GGUF" target="_blank" rel="noreferrer">modelscope.cn 搜索 GGUF</a>;<br>
+                  ③ 下载后把 .gguf 文件放进 <code>models\gguf</code> 文件夹,回来点「↻ 刷新」。
+                </p>
+              </details>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">温度 temperature<br><span class="hint">低=严谨照原文,高=有创造力</span></label>
+              <div class="s-ctl"><input type="range" id="sllmTemp" min="0" max="1.5" step="0.05">
+                <div class="range-val" id="sllmTempV"></div></div>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">最多生成长度 max_tokens</label>
+              <div class="s-ctl"><input type="number" id="sllmMaxTk" min="128" max="8192" step="64"></div>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">多轮上下文<br><span class="hint">携带最近几轮问答,支持追问</span></label>
+              <div class="s-ctl"><input type="number" id="sllmHist" min="0" max="8"></div>
+            </div>
+            <div class="s-row tall">
+              <label class="s-lbl">自定义提示词<br><span class="hint">可选,附加到系统提示词前</span></label>
+              <div class="s-ctl"><textarea id="sllmCustom" rows="3" placeholder="例如: 你是一位耐心的老师,请用通俗语言解释…"></textarea></div>
+            </div>
+            <div class="s-actions">
+              <button class="btn primary" id="btnLlmTest">测试连接</button>
+              <span id="llmTestResult" class="test-result"></span>
+            </div>
+          </div>
+
+          <!-- 嵌入模型 -->
+          <div class="card s-card" id="sec-embed">
+            <div class="card-head"><h3>② 嵌入模型(文本→向量)</h3><span class="tag">Embedding</span></div>
+            <div class="s-row">
+              <label class="s-lbl">嵌入方式</label>
+              <div class="s-ctl radio-line">
+                <label><input type="radio" name="embMode" value="local"><span>本地模型(推荐,离线可用)</span></label>
+                <label><input type="radio" name="embMode" value="api"><span>API 接口</span></label>
+              </div>
+            </div>
+            <div class="s-group" id="embLocalBox">
+              <div class="s-row">
+                <label class="s-lbl">模型名称<br><span class="hint">默认 bge-small-zh-v1.5(约 95MB)</span></label>
+                <div class="s-ctl"><input id="sembModel"></div>
+              </div>
+              <div class="model-status" id="embModelStatus">
+                <span class="hint">正在读取模型状态…</span>
+              </div>
+              <div class="s-actions">
+                <button class="btn primary sm" id="btnModelDownload">⬇ 下载模型</button>
+                <button class="btn outline sm" id="btnModelTest">测试嵌入</button>
+                <button class="btn ghost sm danger" id="btnModelDelete">删除本地模型</button>
+              </div>
+              <div id="modelTaskArea"></div>
+            </div>
+            <div class="s-group" id="embApiBox" hidden>
+              <div class="s-row">
+                <label class="s-lbl">接口地址</label>
+                <div class="s-ctl"><input id="sembApiBase" placeholder="https://api.siliconflow.cn/v1"></div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">API Key</label>
+                <div class="s-ctl"><input id="sembApiKey" type="password"></div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">嵌入模型名</label>
+                <div class="s-ctl"><input id="sembApiModel" placeholder="BAAI/bge-large-zh-v1.5">
+                  <p class="field-note">OpenAI 用 text-embedding-3-small;智谱用 embedding-3;<br>DeepSeek 官方不提供 embedding,请用本地模型或其它服务商</p>
+                </div>
+              </div>
+              <div class="s-actions">
+                <button class="btn primary sm" id="btnEmbApiTest">测试 API 嵌入</button>
+              </div>
+            </div>
+            <div class="embed-test-result" id="embTestResult"></div>
+          </div>
+
+          <!-- 分块与检索 -->
+          <div class="card s-card" id="sec-retrieval">
+            <div class="card-head"><h3>③ 分块与检索</h3><span class="tag">Chunking · Hybrid Search</span></div>
+            <div class="s-row">
+              <label class="s-lbl">分块大小 chunk_size<br><span class="hint">字符数。小→更精准但上下文碎;大→更连贯但检索粗</span></label>
+              <div class="s-ctl"><input type="range" id="srChunkSize" min="100" max="1200" step="50">
+                <div class="range-val" id="srChunkSizeV"></div>
+              </div>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">分块重叠 overlap<br><span class="hint">相邻块的公共尾巴,防止答案被切断</span></label>
+              <div class="s-ctl"><input type="range" id="srOverlap" min="0" max="400" step="20">
+                <div class="range-val" id="srOverlapV"></div>
+              </div>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">送入模型的片段数 top_k<br><span class="hint">最终参与回答的块数,越多参考越全、也越占上下文</span></label>
+              <div class="s-ctl"><input type="range" id="srTopk" min="1" max="12" step="1">
+                <div class="range-val" id="srTopkV"></div></div>
+            </div>
+            <details class="adv">
+              <summary>进阶参数(混合检索内部)</summary>
+              <div class="s-row">
+                <label class="s-lbl">关键词召回数 bm25_top<br><span class="hint">BM25 一路取前多少名参与融合</span></label>
+                <div class="s-ctl"><input type="number" id="srBm25Top" min="10" max="500"></div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">向量召回数 dense_top</label>
+                <div class="s-ctl"><input type="number" id="srDenseTop" min="10" max="500"></div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">RRF 融合常数 k<br><span class="hint">越小越强调排名靠前的路;经验值 60</span></label>
+                <div class="s-ctl"><input type="number" id="srRrfk" min="10" max="200"></div>
+              </div>
+              <div class="s-row">
+                <label class="s-lbl">无相关判定阈值<br><span class="hint">最高余弦相似度低于它 → 模型回答"未找到"</span></label>
+                <div class="s-ctl"><input type="number" id="srMinCos" min="0" max="1" step="0.01"></div>
+              </div>
+            </details>
+            <p class="field-note" id="retrievalNote"></p>
+          </div>
+
+          <!-- 网络 -->
+          <div class="card s-card" id="sec-network">
+            <div class="card-head"><h3>④ 网络与镜像</h3></div>
+            <div class="s-row">
+              <label class="s-lbl">HF 国内镜像<br><span class="hint">下载嵌入模型时走 hf-mirror.com(仅大陆网络建议开启)</span></label>
+              <div class="s-ctl"><label class="switch"><input type="checkbox" id="sadvMirror"><span></span></label></div>
+            </div>
+            <div class="s-row">
+              <label class="s-lbl">数据目录<br><span class="hint">全部数据在此,可整体复制备份</span></label>
+              <div class="s-ctl inline-ctl">
+                <code id="sDataDir" class="path"></code>
+                <button class="btn ghost sm" id="btnOpenData2">打开</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="save-float" id="saveFloat" hidden>
+          <svg viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11"/></svg> 已自动保存
+        </div>
+      </section>
+
+      <!-- ====================== 视图: 教程 ====================== -->
+      <section class="view" id="view-tutorial">
+        <iframe class="tut-frame" id="tutFrame" src="/tutorial.html"></iframe>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ======================= 分块查看弹窗 ======================= -->
+<div class="modal-mask" id="modal" hidden>
+  <div class="modal card">
+    <div class="modal-head">
+      <h3 id="modalTitle">详情</h3>
+      <button class="btn ghost icon" data-close="modal">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast-root" id="toastRoot"></div>
+
+<div class="guide-mask" id="guideMask" hidden>
+  <div class="guide card">
+    <div class="guide-head">
+      <div class="logo-mark big"><svg viewBox="0 0 24 24"><path d="M5 16V8l7 6 7-6v8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div><b>欢迎使用 GreenRAG</b><p>90 秒上手: 一个能标注「第几页」的个人知识库问答系统</p></div>
+    </div>
+    <div class="guide-steps" id="guideSteps"></div>
+    <div class="guide-foot">
+      <label><input type="checkbox" id="guideSkip" checked> 下次启动不再显示</label>
+      <button class="btn primary" id="btnGuideGo">开始 →</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
